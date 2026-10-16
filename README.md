@@ -17,6 +17,10 @@
 
 ---
 
+> **⚠ 先に権限の確認を。** e-learning の手順で作った IAM ユーザー（`kikagaku-iam`）のままでは、CloudShell が起動できず CloudFormation のスタックも作れません（権限が足りないため）。テンプレートを使う前に **[authority.md](authority.md)** の手順で IAM ユーザーに権限を追加してください。管理者権限で進めるパターン 1 と、必要な権限だけ足すパターン 2 を用意しています。
+
+---
+
 ## 0. 使う前に決めておくルール
 
 1. **手動で作った環境と混ぜない。** 自分で作った `kikagaku-cli-vpc` が残っている状態でテンプレートを実行すると、名前が同じリソースが 2 組できて混乱します。先に「5. 消す」の手順で消してから使ってください。
@@ -27,6 +31,17 @@
 ---
 
 ## 1. 事前準備（初回だけ・5 分）
+
+### 1-0. IAM ユーザーに権限を追加する
+
+CloudFormation と CloudShell を使うには、IAM ユーザーに次のどちらかの権限が必要です。手順は [authority.md](authority.md) にあります。
+
+| パターン | 付けるポリシー | 特徴 |
+|---|---|---|
+| 1. 管理者権限で進める | `AdministratorAccess` | 以降のハンズオンで権限エラーが出ない。学習用の個人アカウント向け |
+| 2. 必要な権限だけ足す | `AWSCloudShellFullAccess` ＋ `AWSCloudFormationFullAccess` ＋ `AWSBillingReadOnlyAccess` | 影響範囲が小さい。新しいサービスを使う回ごとに追加が必要になることがある |
+
+どちらの場合も、無料枠やクレジットの残りを IAM ユーザーから見るには、ルートユーザーで「IAM ユーザーおよびロールによる請求情報へのアクセス」を有効にする必要があります（authority.md 手順 2）。
 
 ### 1-1. キーペアを 1 つ作る
 
@@ -142,6 +157,7 @@ CloudFormation は途中で失敗すると **作ったものを全部巻き戻�
 
 1. スタックの「**イベント**」タブを開き、赤い `CREATE_FAILED` の行を **1 つだけ**探す（一番上の方にある、最初に失敗したもの）
 2. 「状況の理由」を読む。よくあるもの:
+   - `User: arn:aws:iam::...:user/kikagaku-iam is not authorized to perform: ...` → IAM ユーザーの権限不足。[authority.md](authority.md) で権限を追加（パターン 2 の人は、メッセージ中のサービスの `FullAccess` を追加）
    - `The key pair 'kikagaku-cli-key' does not exist` → キーペアを作っていない（1-1）
    - `Parameter validation failed ... MyIp` → IP に `/32` を付けた、または空欄
    - `AssertDescription: このテンプレートは東京リージョン専用` → リージョンが東京ではない
@@ -226,6 +242,9 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kikagaku/aws-handson-cloudfo
 ---
 
 ## 8. よくある質問
+
+**Q. CloudFormation の「スタックの作成」を押すと権限エラーになります。CloudShell も「Unable to start the environment」で開きません。**
+IAM ユーザーの権限不足です。e-learning で作った `kikagaku-iam` には CloudShell と CloudFormation の権限が含まれていません。[authority.md](authority.md) の手順で権限を追加し、いったんサインアウトしてログインし直してください。
 
 **Q. 第2回を手で作った状態から、第3回の分だけテンプレートで足せますか？**
 できません。各テンプレートは単独で完結する設計です。手で作った環境を「5.」で消してから `stage2` を作るか、手で作った環境の上に Notion の手順で手動で進めてください。
