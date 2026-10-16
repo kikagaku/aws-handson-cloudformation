@@ -1,10 +1,5 @@
 # IAM ユーザーに必要な権限の追加と、IAM ユーザーでのログイン手順
 
-> **このリポジトリのテンプレートを使う前に必ず確認してください。**
-> e-learning の手順で作った IAM ユーザー（例: `kikagaku-iam`）には VPC・EC2・RDS・IAM の権限しか付いていません。
-> そのままでは **CloudShell が起動できず、CloudFormation のスタックも作成できません**（「Unable to start the environment」「not authorized to perform: cloudformation:CreateStack」などのエラーになります）。
-> このページの手順で権限を追加してから、[README](README.md) の「2. 作る」に進んでください。
-
 このハンズオンでは、普段の作業をルートユーザーではなく IAM ユーザーで行います。
 この手順で IAM ユーザーに必要な権限を追加し、以降はその IAM ユーザーでログインして作業します。
 
