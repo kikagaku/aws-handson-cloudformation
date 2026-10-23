@@ -324,21 +324,43 @@ exit
 
 窓 2（Web サーバーの中）で進めます。
 
-### 6-1. PHP などを入れる
+### 6-1. PHP を入れる（バージョンを固定して）
+
+> **2026 年 10 月 21 日、PHP に重大な脆弱性（CVE-2026-109618 / CVE-2026-109619、通称 PHP2Shell）が公開されました。** 修正版は 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12 以降です。この資料では **PHP 8.4.27** を指定して入れます。「`php` とだけ書いて入れる」と古い版が入ることがあるので、必ず下の 2 つのコマンドをこの順番で打ってください。
+
+| 固定する値 | この資料の値 |
+|---|---|
+| Amazon Linux 2023 のリリース版 | `2023.12.20261021`（修正版の PHP を含む最初のリリース） |
+| PHP のパッケージ版 | `php8.4-8.4.27` |
+| 確認の下限 | `php -v` が **8.4.27 以上** |
+
+まず、OS の「パッケージ一覧」を修正版が含まれるリリースに揃えます。
 
 ```bash
-sudo dnf install -y wget php-mysqlnd php-fpm php-mysqli php-json php php-devel
+sudo dnf upgrade -y --releasever=2023.12.20261021
 ```
 
-**何をしているか**: WordPress は PHP というプログラミング言語で書かれています。PHP 本体と、PHP から MariaDB に接続するための部品、ファイルをダウンロードする `wget` をまとめて入れています。
+**何をしているか**: Amazon Linux 2023 は「サーバーを作った時点のパッケージ一覧」に固定されています（リリースロックという仕組みです）。Web サーバーは Day1 に作ったので、そのままでは Day1 時点の古い PHP しか見えません。`--releasever` で「2026 年 10 月 21 日版の一覧に切り替える」と宣言し、OS 全体をその版に揃えています。数分かかります。
+
+次に、バージョンを指定して PHP を入れます。
+
+```bash
+sudo dnf install -y wget php8.4-8.4.27 php8.4-fpm-8.4.27 php8.4-mysqlnd-8.4.27
+php -v
+```
+
+1 行目に `PHP 8.4.27` と出れば OK です。**8.4.26 以下、または 8.1 / 8.2 / 8.3 と出たら、1 つ目の `dnf upgrade` をやり直してから入れ直してください。**
+
+**何をしているか**: WordPress は PHP というプログラミング言語で書かれています。PHP 本体と、PHP から MariaDB に接続するための部品、ファイルをダウンロードする `wget` をまとめて入れています。パッケージ名の後ろの `-8.4.27` が「この版を入れる」という指定です。
 
 | パッケージ | 役割（今は「そういうものがある」で OK） |
 |---|---|
-| `php` | PHP 本体。WordPress のプログラムを実行する |
-| `php-mysqlnd` / `php-mysqli` | PHP から MySQL / MariaDB に接続する |
-| `php-fpm` | Apache と連携して PHP を速く動かす |
-| `php-json` | JSON というデータ形式を扱う |
+| `php8.4` | PHP 本体（8.4 系の 8.4.27 を指定）。WordPress のプログラムを実行する |
+| `php8.4-fpm` | Apache と連携して PHP を動かす |
+| `php8.4-mysqlnd` | PHP から MySQL / MariaDB に接続する（`mysqli` という部品も一緒に入る） |
 | `wget` | URL からファイルを取ってくる |
+
+> **実務ではどうするか**: 脆弱性が出たら「修正版を含むリリース版」と「パッケージ版」の 2 つを決めて指定するのが、Amazon Linux 2023 でのやり方です。この資料も、次に PHP の脆弱性が出たら上の表の 2 つの値を差し替えます。詳しくは [Amazon Linux Security Center](https://alas.aws.amazon.com/alas2023.html) と [ALAS2023-2026-3303](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-3303.html) を見てください。
 
 ### 6-2. WordPress 本体を置く
 
@@ -409,6 +431,7 @@ DB の情報を入力します。
 | Web から `mysql -h` で **タイムアウト** | DB の SG に 3306 がない | 5-2 |
 | Web から `mysql -h` で `Access denied` | パスワード違い／ユーザーを `10.1.%` で作っていない | 4-3 をやり直す（同じ GRANT をもう一度打てば OK） |
 | Web から `mysql -h` で `Can't connect ... (111)` | ホストに**パブリック** IP を書いた／DB が起動していない | プライベート IP（10.1.2.x）を使う。DB サーバーで `systemctl status mariadb` |
+| `php -v` が 8.4.26 以下／8.1〜8.3 系が出る | `dnf upgrade --releasever=...` を飛ばした／`php` とだけ書いて入れた | 6-1 の 1 つ目のコマンドからやり直す（`sudo dnf remove -y "php8.*"` で消してから） |
 | WordPress 画面で「データベース接続確立エラー」 | ホスト名・ユーザー・パスワードの入力違い | ホスト＝DB のプライベート IP、`wordpress` / `wordpresspasswd` |
 | WordPress 画面で「wp-config.php に書き込めません」 | `chown apache` を忘れた | 6-3 |
 | ブラウザで It works! のまま／404 | Apache を再起動していない／ファイルの置き場所が違う | `sudo systemctl restart httpd`、`ls /var/www/html/` に `index.php` があるか |
@@ -520,7 +543,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kikagaku/aws-handson-cloudfo
 |---|---|---|
 | Day1 | **繋がる** | 作る順番は VPC → サブネット → IGW → ルート → SG → EC2。タイムアウト＝経路、拒否＝サーバー |
 | Day2 | **隠す** | パブリックかプライベートかはルートテーブルで決まる。踏み台で入り、NAT で出る。NAT は消し忘れると課金 |
-| Day3 | **動く** | ブラウザ → Apache → PHP → MariaDB → HTML。root を日常で使わない。画面とデータは別の場所にある |
+| Day3 | **動く** | ブラウザ → Apache → PHP → MariaDB → HTML。root を日常で使わない。画面とデータは別の場所にある。ソフトは「リリース版＋パッケージ版」を指定して入れる（脆弱性対応） |
 
 **今日の構成の弱点と、実務での答え**（次に学ぶことの地図です）
 
