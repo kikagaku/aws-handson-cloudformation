@@ -22,7 +22,7 @@ cd "$(dirname "$0")/.."
 PARAMS=(MyIp="$MYIP" KeyName="$KEYNAME")
 if [ "$STAGE" = "2" ]; then PARAMS+=(EnableNat="$ENABLE_NAT"); fi
 
-echo "== $TEMPLATE を $STACK として作成します（リージョン: $REGION）"
+echo "== $TEMPLATE を $STACK として作成します（リージョン: ${REGION}）"
 aws cloudformation deploy \
   --region "$REGION" \
   --stack-name "$STACK" \
