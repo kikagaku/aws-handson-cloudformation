@@ -148,6 +148,12 @@ scp -i kikagaku-cli-key.pem kikagaku-cli-key.pem ec2-user@（Webサーバーの�
 
 ### 3-1. インストールと起動
 
+以下コマンドでデータベースサーバーにMariaDBをインストールします。
+
+末尾に -server が付いているものが「サーバー（サービス）本体」を指します。
+※参考　 WebServer側に入れるクライアントはmariadb105で-servreがありません。
+
+
 ```bash
 sudo dnf install -y mariadb105-server
 ```
