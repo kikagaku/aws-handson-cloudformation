@@ -107,7 +107,7 @@ curl -s https://checkip.amazonaws.com
 します。
 
 ```
-ssh -i kikagaku-cli-key.pem ec2-user@(WebサーバーのプライベートIPアドレス)
+ssh -i kikagaku-cli-key.pem ec2-user@(WebサーバーのパブリックIPアドレス)
 ```
 
 以下の質問にはyesで答えます（WebServerへの接続確認）
@@ -177,11 +177,14 @@ sudo systemctl enable mariadb
 sudo systemctl status mariadb
 ```
 
+
+**DBを起動しよう！**: 
+Day1 の Apache と同じイメージです。`start`でmariadbで初回起動。`enable` で再起動後も自動起動。`status` で状態確認。
 `Active: active (running)` なら動いています（`q` で表示を抜けます）。
 
-**何をしているか**: Day1 の Apache と同じ流れです。`dnf` で入れて、`systemctl start` で起動、`enable` で再起動後も自動起動。違いは、入れたのが Web サーバー（httpd）ではなくデータベース（mariadb）だという点だけです。
 
 ### 3-2. 初期設定（root パスワードなど）
+DBの初期設定を行なっていきます・
 
 ```bash
 sudo mysql_secure_installation
@@ -193,15 +196,13 @@ sudo mysql_secure_installation
 |---|---|---|
 | Enter current password for root (enter for none): | **Enter**（空） | 初期状態はパスワードなし |
 | Switch to unix_socket authentication [Y/n] | **n** | OS ユーザーと DB ユーザーを連動させない |
-| Change the root password? [Y/n] | **Y** → 任意のパスワードを 2 回 | **必ずメモ**。後で使います |
+| Change the root password? [Y/n] | **Y** → 任意のパスワードを 2 回 | **必ずメモ**。後で使います passwordは画面には表示はされませんが、入力はできています。|
 | Remove anonymous users? [Y/n] | **Y** | 名前のないユーザーを消す |
-| Disallow root login remotely? [Y/n] | **Y** | root では外から入れなくする。アプリは専用ユーザーで繋ぐのが原則 |
+| Disallow root login remotely? [Y/n] | **Y** | DBサーバー以外からroot権限でログインをすることを禁止する。遠隔ログインでは専用ユーザーを作成して繋ぐのが原則 |
 | Remove test database and access to it? [Y/n] | **Y** | お試し用 DB を消す |
 | Reload privilege tables now? [Y/n] | **Y** | 設定を反映 |
 
 `Thanks for using MariaDB!` と出れば完了です。
-
-**何をしているか**: 「全能の root を日常で使わない」「外からは専用ユーザーだけ」という、Day2 の「層3: 認証」の設定です。AWS の IAM で「ルートユーザーは使わず IAM ユーザーで作業する」のと同じ考え方です。
 
 ---
 
@@ -212,10 +213,9 @@ sudo mysql_secure_installation
 ```bash
 mysql -u root -p
 ```
+> -u user -p password の略
 
 3-2 で決めた root パスワードを入れると、プロンプトが `MariaDB [(none)]>` に変わります。ここからは SQL を打ちます。
-
-**何をしているか**: `mysql` は DB に接続して操作する「クライアント」です。`-u root` はユーザー、`-p` はパスワードを聞いてもらう指定です。
 
 まず今ある DB を見てみます。
 
@@ -241,9 +241,18 @@ SHOW DATABASES;
 CREATE DATABASE wordpress DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 ```
 
-**何をしているか**: `wordpress` という名前の DB を、日本語が扱える文字コード（UTF-8）で作っています。もう一度 `SHOW DATABASES;` を打つと、`wordpress` が増えているはずです。
+**テーブルの作成**: `wordpress` という名前の DB を、日本語が扱える文字コード（UTF-8）で作っています。もう一度 `SHOW DATABASES;` を打つと、`wordpress` が増えているはずです。
 
-> **SQL の書き方**: `CREATE` `DATABASE` のような決まった単語（予約語）は大文字、自分で付ける名前は小文字で書くのが慣習です（`create database wordpress` でも動きます）。文の最後は `;` で終わります。
+> コマンドの構成要素
+CREATE DATABASE wordpresswordpress という名称のデータベースを新規作成します。
+DEFAULT CHARACTER SET utf8
+データベース内の文字コードのデフォルトを「UTF-8」に設定します。
+COLLATE utf8_general_ci
+文字列を比較・並び替える際のルール（照合順序）です。末尾の _ci は Case Insensitive（大文字・小文字を区別しない） を意味しており、A と a を同一として扱います。
+
+
+
+> **SQL の書き方**: `CREATE` `DATABASE` のような決まった単語（予約語）は大文字、自分で付ける名前は小文字で書くのが慣習です（`create database wordpress` でも動きますが上記の慣習には慣れておきましょう）。文の最後は `;` で終わります。
 
 ### 4-3. ユーザーを作って権限を渡す
 
