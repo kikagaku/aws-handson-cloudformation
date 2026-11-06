@@ -95,7 +95,7 @@ Day2 の宿題で NAT と Elastic IP を消した人は、今日 DB サーバー
 
 ---
 
--- 復習 Web Serverに入る方法 --
+## 復習 Web Serverに入る方法
 以下コマンドをクラウドシェルで実行
 ```
 curl -s https://checkip.amazonaws.com
@@ -106,6 +106,16 @@ curl -s https://checkip.amazonaws.com
 
 ```
 ssh -i kikagaku-cli-key.pem ec2-user@(WebサーバーのプライベートIPアドレス)
+```
+
+以下の質問にはyesで答えます（WebServerへの接続確認）
+```
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes　
+```
+
+Permissions 0644 for 'kikagaku-cli-key.pem' are too openと言われた場合（pemファイルの権限が緩いと言われています）以下のコマンドで権限設定をしましょう、
+```
+chmod 600 kikagaku-cli-key.pem
 ```
 
 ## 3. DB サーバーに MariaDB を入れる
