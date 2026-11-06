@@ -166,6 +166,11 @@ mysql --version
 
 `mysql  Ver 15.1 Distrib 10.5.x-MariaDB` のように出れば OK です。MariaDB は MySQL と互換性があり、コマンド名は `mysql` のままです。
 
+>>> インストールしているソフトウェア本体は MariaDB ですが、操作する際のコマンドには mysql を使います。   なぜ MariaDB なのに mysql コマンドを使うのか？MySQL からの完全互換フォーク（派生）であるため
+MariaDB は、もともと MySQL を開発した創業者たちが「オープンソースとしての自由を守るため」に MySQL をベースにして立ち上げたプロジェクトです。既存の仕組みをそのまま流用するため
+世界中の多くのWebアプリや管理ツール、開発者の手順書は mysql コマンド前提で作られていました。そのため、MariaDB は「MySQL から乗り換えてもこれまでのコマンドやスクリプトがそのまま動く」ように、あえてクライアントコマンド名を mysql のまま互換性を持たせて提供しています。
+
+
 ```bash
 sudo systemctl start mariadb
 sudo systemctl enable mariadb
