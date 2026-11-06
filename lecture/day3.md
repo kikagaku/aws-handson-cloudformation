@@ -427,8 +427,6 @@ exit
 sudo dnf upgrade -y --releasever=2023.12.20261021
 ```
 
-**何をしているか**: Amazon Linux 2023 は「サーバーを作った時点のパッケージ一覧」に固定されています（リリースロックという仕組みです）。`--releasever` で「2026 年 10 月 21 日版の一覧に切り替える」と宣言し、OS 全体をその版に揃えています。数分かかります。
-
 次に、バージョンを指定して PHP を入れます。
 
 ```bash
@@ -447,18 +445,33 @@ php -v
 | `php8.4-mysqlnd` | PHP から MySQL / MariaDB に接続する（`mysqli` という部品も一緒に入る） |
 | `wget` | URL からファイルを取ってくる |
 
-> **実務ではどうするか**: 脆弱性が出たら「修正版を含むリリース版」と「パッケージ版」の 2 つを決めて指定するのが、Amazon Linux 2023 でのやり方です。この資料も、次に PHP の脆弱性が出たら上の表の 2 つの値を差し替えます。詳しくは [Amazon Linux Security Center](https://alas.aws.amazon.com/alas2023.html) と [ALAS2023-2026-3303](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-3303.html) を見てください。
-
 ### 6-2. WordPress 本体を置く
 
 ```bash
 wget https://wordpress.org/latest.tar.gz
 ls                      # latest.tar.gz があるか
-tar -xzf latest.tar.gz  # 解凍
+tar -xzf latest.tar.gz  # 解凍 
 ls wordpress            # .php ファイルがたくさん出てくる
 ```
 
+> tar（Tape Archive）
+複数のファイルを1つにまとめる（アーカイブ化）、またはそれを展開するためのコマンドです。
+-x（extract）
+アーカイブからファイルを取り出す（展開する・解凍する）指示です。
+-z（gzip）
+ファイルが gzip 形式（.gz） で圧縮されているため、gzip を使って解凍しながら処理する指示です。
+-f（file）
+対象となるアーカイブファイルを指定する指示です。このオプションの直後にファイル名（latest.tar.gz）を置く必要があります。
+
 Apache が返すフォルダ `/var/www/html` の中身を、WordPress のファイルに入れ替えます。
+Day 1で作った index.html が残っていると、Webサーバーの設定の優先順位により、index.php よりも古い index.html が優先表示されてWordPressの初期設定画面が開かないトラブルが起きるためです。「表示速度」と「アクセス集中（高負荷）への耐性」において、静的ファイル（HTML）は圧倒的に提供するのが早く、PHPなどの動的プログラムは確実に負けます。
+
+> 「同居」していいもの・ダメなもの
+NGな同居（衝突する）:
+index.html と index.php（どちらをトップ画面にするか競合する）
+OKな同居（全く問題ない）:
+index.php と company.html（URLで直接 /company.html を叩けばちゃんと表示される）
+index.php と画像・CSS・JavaScript（WordPressのフォルダ内にも大量の画像や .css などの静的ファイルが同居しています）
 
 ```bash
 sudo rm -r /var/www/html/*
@@ -466,7 +479,7 @@ sudo cp -r wordpress/* /var/www/html/
 ls /var/www/html/
 ```
 
-**何をしているか**: Day1 では `/var/www/html/index.html` を返していました。WordPress では代わりに `.php` ファイルが動いて HTML を作ります。だからフォルダの中身をまるごと差し替えています。
+**何をしているか**: Day1 では `/var/www/html/index.html` を返していました。WordPress では代わりに `.php` ファイルが動いて HTML を作ります。今回消既存のhtmlを消さなければならなかった理由は、「index.html」と「index.php」という、トップページ用の代表ファイル同士が鉢合わせ（競合）してしまうからです。
 
 ### 6-3. 所有者を apache にして再起動
 
@@ -497,6 +510,13 @@ DB の情報を入力します。
 | データベースのホスト名 | **DB サーバーのプライベート IP（10.1.2.x）** |
 | テーブル接頭辞 | `wp_` のまま |
 
+>WordPressをインストールするとデータベース内に以下のようなテーブルが自動で作られます。
+wp_posts（記事データ）
+wp_users（ユーザー情報）
+wp_comments（コメントデータ）
+wp_options（サイト全体の設定）
+この先頭についている wp_ の部分が「テーブル接頭辞」です。
+
 「送信」→「インストール実行」
 
 **何をしているか**: 5-3 で手で打った `mysql -h 10.1.2.x -u wordpress -p wordpress` と同じ情報を、WordPress に教えています。WordPress はこれを `wp-config.php` に書き、以後の通信はこのファイルを見て行われます。
@@ -525,7 +545,7 @@ DB の情報を入力します。
 | `10.1.%` の意味が分からない | SQL のワイルドカード | `10.1.0.0/16` と同じ ＝ VPC の中からの接続を許可 |
 
 ---
-
+を受賞することができました。
 ## 8. 演習3（個人ワーク）: sample.php で WordPress の裏側を再現する
 
 WordPress は `.php` ファイルが「ブラウザと DB の間」を取り持っています。その最小版を自分で書いて、仕組みを確かめます。3〜4 人のグループで、詰まったら助け合ってください。
