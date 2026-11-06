@@ -90,8 +90,10 @@ Day2 の宿題で NAT と Elastic IP を消した人は、今日 DB サーバー
 
 ### 2-3. ターミナルを 2 つ
 
-- 窓 1: Web サーバー → DB サーバー（`ip-10-1-2-x`）。3〜4 章で使う
-- 窓 2: Web サーバー（`ip-10-1-1-x`）。5〜6 章で使う
+- 窓 1: Web サーバー → DB サーバー（`ip-10-1-2-x`）。
+- 窓 2: Web サーバー（`ip-10-1-1-x`）。
+
+※ CLIのプロンプトはプライベートIPで表示がされます。
 
 ---
 
@@ -113,6 +115,7 @@ ssh -i kikagaku-cli-key.pem ec2-user@(WebサーバーのプライベートIPア�
 Are you sure you want to continue connecting (yes/no/[fingerprint])? yes　
 ```
 
+### トラブルシューティング
 Permissions 0644 for 'kikagaku-cli-key.pem' are too openと言われた場合（pemファイルの権限が緩いと言われています）以下のコマンドで権限設定をしましょう、
 ```
 chmod 600 kikagaku-cli-key.pem
@@ -125,6 +128,22 @@ chmod 600 kikagaku-cli-key.pem
 ```bash
 ssh -i kikagaku-cli-key.pem ec2-user@(DBサーバーのプライベートIPアドレス)
 ```
+
+### トラブルシューティング
+Warning: Identity file kikagaku-cli-key.pem not accessible: No such file or directory.と言われた場合
+pemファイルがWebServer上にありません。
+
+```bash
+ssh -i kikagaku-cli-key.pem ec2-user@(DBサーバーのプライベートIPアドレス)
+```
+新しいクラウドシェルの窓を開き、.pemが存在するフォルダに移動して以下のコマンドを実行しましょう。
+（そもそもクラウドシェルにファイルのアップロードができていない場合は右上のアクション→ファイルのアップロードからpemファイルをアップロードします）
+
+```
+scp -i kikagaku-cli-key.pem kikagaku-cli-key.pem ec2-user@（WebサーバーのパブリックIP）:/home/ec2-user/
+```
+
+※ scp は ssh を使ったファイルコピーです。pemファイルをWebServerの内部に転送しています。（詳細はDay2の資料を参考にしてください）
 
 
 ### 3-1. インストールと起動
