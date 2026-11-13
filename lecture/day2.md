@@ -288,7 +288,7 @@ VPC → 左メニュー「**ルートテーブル**」→「**ルートテーブ
 NAT が「使用可能」になったら、窓 1（DB サーバーの中、`ip-10-1-2-x`）でもう一度:
 
 ```bash
-curl https://info.cern.ch/hypertext/WWW/TheProject.html
+curl -m 10 https://info.cern.ch/hypertext/WWW/TheProject.html
 ```
 
 今度は HTML が返ってきます。これは 1991 年に公開された**世界で最初の Web サイト**で、今も動いています。ブラウザで同じ URL を開いて見比べてみてください。
