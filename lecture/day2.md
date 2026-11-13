@@ -349,11 +349,6 @@ curl -v https://info.cern.ch/hypertext/WWW/TheProject.html
 | 2 | 自宅の IP と **NAT の Elastic IP** を教え合い、相手の SG `kikagaku-cli-sg` に両方を `/32` で追加（80 番） | NAT の IP は VPC → NAT ゲートウェイ → Elastic IP の列 |
 | 3 | 相手のページを PC のブラウザで見る | `http://相手のパブリックIP/` |
 | 4 | 相手のページを**自分の DB サーバー**から curl で見る | `curl http://相手のパブリックIP/` |
-| 5 | 相手のアクセスログに、自分の自宅 IP と NAT の IP の**2 種類**が残っているか確認 | 相手の Web サーバーで `sudo tail -f /var/log/httpd/access_log` |
-
-**何をしているか（手順 5）**: `tail -f` は「ファイルの末尾を追いかけ続ける」で、相手がアクセスした瞬間に行が増えます。手順 3 のアクセスは自宅 IP、手順 4 のアクセスは NAT の IP で記録されます。同じ「あなた」からの通信が、経路によって違う IP に見える。これが NAT です。
-
-窓を 2 つ開いて、片方で `tail -f`、もう片方で curl、という使い方が実務でもよく出てきます。
 
 ---
 
