@@ -345,7 +345,7 @@ curl -v https://info.cern.ch/hypertext/WWW/TheProject.html
 
 | 手順 | やること | ヒント |
 |---|---|---|
-| 1 | オリジナルの Web ページ（HTML / CSS / JS）を作り、`scp` で Web サーバーの `/var/www/html/` に置く | 生成 AI に「ToDo アプリを HTML 1 枚で」と頼んで OK。`scp -i key.pem index.html ec2-user@IP:/tmp/` → Web サーバーで `sudo mv /tmp/index.html /var/www/html/` |
+| 1 | オリジナルの Web ページ（HTML / CSS / JS）を作り、`scp` で Web サーバーの `/var/www/html/` に置く | 生成 AI に「ToDo アプリを HTML 1 枚で」と頼んで OK。`scp -i kikagaku-cli-key.pem index.html ec2-user@IP:/tmp/` → Web サーバーで `sudo mv /tmp/index.html /var/www/html/` |
 | 2 | 自宅の IP と **NAT の Elastic IP** を教え合い、相手の SG `kikagaku-cli-sg` に両方を `/32` で追加（80 番） | NAT の IP は VPC → NAT ゲートウェイ → Elastic IP の列 |
 | 3 | 相手のページを PC のブラウザで見る | `http://相手のパブリックIP/` |
 | 4 | 相手のページを**自分の DB サーバー**から curl で見る | `curl http://相手のパブリックIP/` |
